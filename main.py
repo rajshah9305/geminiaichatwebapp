@@ -3,9 +3,8 @@ import os
 import base64
 from typing import Optional
 from dotenv import load_dotenv
-from fastapi import FastAPI
-from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, Request
+from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse, FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from google import genai
@@ -212,13 +211,36 @@ def _extract_sources(meta):
     return sources
 
 
-# Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+
+MIME_TYPES = {
+    ".html": "text/html",
+    ".css": "text/css",
+    ".js": "application/javascript",
+    ".json": "application/json",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".svg": "image/svg+xml",
+    ".ico": "image/x-icon",
+}
+
+
+@app.get("/static/{file_path:path}")
+async def serve_static(file_path: str):
+    full_path = os.path.join(STATIC_DIR, file_path)
+    if not os.path.isfile(full_path):
+        return JSONResponse({"error": "Not found"}, status_code=404)
+    ext = os.path.splitext(file_path)[1].lower()
+    mime = MIME_TYPES.get(ext, "application/octet-stream")
+    with open(full_path, "rb") as f:
+        content = f.read()
+    return Response(content=content, media_type=mime)
 
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend():
-    with open("static/index.html", "r") as f:
+    index_path = os.path.join(STATIC_DIR, "index.html")
+    with open(index_path, "r") as f:
         return HTMLResponse(content=f.read())
 
 

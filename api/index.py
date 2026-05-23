@@ -1,7 +1,6 @@
 """
 Vercel serverless entry point.
 Vercel expects a callable named `app` in api/index.py.
-We import the FastAPI app from the parent package.
 """
 import sys
 import os
