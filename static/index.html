@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gemini Chat</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- KaTeX for math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="14" r="14" fill="url(#grad1)"/>
+        <path d="M8 14 Q14 6 20 14 Q14 22 8 14Z" fill="white" opacity="0.9"/>
+        <defs>
+          <linearGradient id="grad1" x1="0" y1="0" x2="28" y2="28">
+            <stop offset="0%" stop-color="#4f8ef7"/>
+            <stop offset="100%" stop-color="#a855f7"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span>Gemini Chat</span>
+    </div>
+    <button class="icon-btn" id="newChatBtn" title="New Chat (Ctrl+N)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Model -->
+  <div class="sidebar-section">
+    <label class="section-label">Model</label>
+    <select id="modelSelect" class="select-input"></select>
+    <div id="modelInfo" class="model-info-badge"></div>
+  </div>
+
+  <!-- Thinking Level -->
+  <div class="sidebar-section" id="thinkingSection">
+    <label class="section-label">Thinking Level</label>
+    <div class="thinking-levels">
+      <button class="level-btn active" data-level="HIGH">High</button>
+      <button class="level-btn" data-level="MEDIUM">Med</button>
+      <button class="level-btn" data-level="LOW">Low</button>
+      <button class="level-btn" data-level="OFF">Off</button>
+    </div>
+  </div>
+
+  <!-- Temperature -->
+  <div class="sidebar-section">
+    <label class="section-label">Temperature <span id="tempValue" class="param-value">1.0</span></label>
+    <input type="range" id="tempSlider" class="range-slider" min="0" max="2" step="0.1" value="1.0" />
+    <div class="range-labels"><span>Precise</span><span>Creative</span></div>
+  </div>
+
+  <!-- Features -->
+  <div class="sidebar-section">
+    <label class="section-label">Features</label>
+    <label class="toggle-row">
+      <span>Google Search</span>
+      <div class="toggle"><input type="checkbox" id="searchCheck" checked /><span class="slider"></span></div>
+    </label>
+    <label class="toggle-row">
+      <span>Show Thinking</span>
+      <div class="toggle"><input type="checkbox" id="thinkingCheck" checked /><span class="slider"></span></div>
+    </label>
+    <label class="toggle-row">
+      <span>Auto-title Chats</span>
+      <div class="toggle"><input type="checkbox" id="autoTitleCheck" checked /><span class="slider"></span></div>
+    </label>
+    <label class="toggle-row">
+      <span>Dark Mode</span>
+      <div class="toggle"><input type="checkbox" id="darkModeCheck" /><span class="slider"></span></div>
+    </label>
+    <label class="toggle-row">
+      <span>Compact View</span>
+      <div class="toggle"><input type="checkbox" id="compactCheck" /><span class="slider"></span></div>
+    </label>
+  </div>
+
+  <!-- System Prompt -->
+  <div class="sidebar-section">
+    <label class="section-label">System Prompt</label>
+    <div class="system-prompt-presets">
+      <button class="preset-btn" data-preset="">None</button>
+      <button class="preset-btn" data-preset="You are a helpful coding assistant. Always provide complete, working code with explanations.">Coder</button>
+      <button class="preset-btn" data-preset="You are a concise assistant. Keep all responses brief and to the point.">Concise</button>
+      <button class="preset-btn" data-preset="You are a creative writing assistant. Be imaginative, descriptive, and engaging.">Creative</button>
+    </div>
+    <textarea id="systemPrompt" class="system-prompt-input" placeholder="Optional system instructions..."></textarea>
+  </div>
+
+  <!-- Chat History -->
+  <div class="sidebar-section sidebar-history">
+    <div class="history-header">
+      <label class="section-label" style="margin-bottom:0">History</label>
+      <input type="text" id="searchHistory" class="history-search" placeholder="Search chats..." />
+    </div>
+    <div id="chatHistoryList" class="chat-history-list"></div>
+    <button class="danger-btn" id="clearAllBtn">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/>
+      </svg>
+      Clear All Chats
+    </button>
+  </div>
+
+  <div class="sidebar-footer">
+    <div id="tokenUsage" class="token-usage hidden">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+      <span id="tokenText">Tokens: 0</span>
+    </div>
+    <div class="sidebar-version">Gemini Chat v2.0</div>
+  </div>
+</aside>
+
+<!-- ===== MAIN ===== -->
+<div class="main-wrapper">
+  <header class="topbar">
+    <button class="icon-btn" id="sidebarToggle" title="Toggle Sidebar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 12h18M3 6h18M3 18h18"/>
+      </svg>
+    </button>
+    <div class="topbar-title" id="chatTitle">New Chat</div>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="searchMsgBtn" title="Search in chat (Ctrl+F)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="exportBtn" title="Export Chat">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="shareBtn" title="Share / Copy Link">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+      </button>
+      <div class="dropdown-wrapper">
+        <button class="icon-btn" id="moreBtn" title="More options">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/>
+            <circle cx="12" cy="19" r="1" fill="currentColor"/>
+          </svg>
+        </button>
+        <div class="dropdown-menu hidden" id="moreMenu">
+          <button class="dropdown-item" id="copyAllBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+            </svg>
+            Copy All Messages
+          </button>
+          <button class="dropdown-item" id="exportJsonBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            </svg>
+            Export as JSON
+          </button>
+          <button class="dropdown-item" id="exportTxtBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            </svg>
+            Export as Text
+          </button>
+          <button class="dropdown-item" id="renameChatBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Rename Chat
+          </button>
+          <button class="dropdown-item danger" id="deleteChatBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+            </svg>
+            Delete This Chat
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Search bar -->
+  <div id="searchBar" class="search-bar hidden">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+    </svg>
+    <input type="text" id="searchInput" placeholder="Search messages..." />
+    <span id="searchCount" class="search-count"></span>
+    <button class="icon-btn" id="searchPrev" title="Previous">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button class="icon-btn" id="searchNext" title="Next">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <button class="icon-btn" id="searchClose">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <main class="chat-area" id="chatArea">
+    <!-- Welcome -->
+    <div class="welcome-screen" id="welcomeScreen">
+      <div class="welcome-logo">
+        <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+          <circle cx="36" cy="36" r="36" fill="url(#wg)"/>
+          <path d="M18 36 Q36 14 54 36 Q36 58 18 36Z" fill="white" opacity="0.9"/>
+          <defs>
+            <linearGradient id="wg" x1="0" y1="0" x2="72" y2="72">
+              <stop offset="0%" stop-color="#4f8ef7"/>
+              <stop offset="100%" stop-color="#a855f7"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <h1>Gemini Chat</h1>
+      <p>Powered by Google's most advanced AI — with deep thinking, real-time search, and multimodal support</p>
+      <div class="suggestion-grid" id="suggestionGrid">
+        <button class="suggestion-card" data-prompt="Explain quantum computing in simple terms with an analogy">
+          <span class="suggestion-icon">⚛️</span><span>Explain quantum computing</span>
+        </button>
+        <button class="suggestion-card" data-prompt="Write a Python function to find all prime numbers up to n using the Sieve of Eratosthenes">
+          <span class="suggestion-icon">🐍</span><span>Python: Sieve of Eratosthenes</span>
+        </button>
+        <button class="suggestion-card" data-prompt="What are the latest AI developments in 2025? Search the web for recent news.">
+          <span class="suggestion-icon">🔍</span><span>Latest AI news (web search)</span>
+        </button>
+        <button class="suggestion-card" data-prompt="Help me write a professional email declining a job offer gracefully">
+          <span class="suggestion-icon">✉️</span><span>Write a professional email</span>
+        </button>
+        <button class="suggestion-card" data-prompt="Analyze the pros and cons of microservices vs monolithic architecture for a startup">
+          <span class="suggestion-icon">🏗️</span><span>Microservices vs Monolith</span>
+        </button>
+        <button class="suggestion-card" data-prompt="Create a detailed step-by-step roadmap to learn machine learning from scratch in 6 months">
+          <span class="suggestion-icon">🤖</span><span>ML learning roadmap</span>
+        </button>
+        <button class="suggestion-card" data-prompt="Solve this math problem step by step: Find the derivative of f(x) = x³·sin(x) + e^(2x)">
+          <span class="suggestion-icon">📐</span><span>Math: Derivatives step-by-step</span>
+        </button>
+        <button class="suggestion-card" data-prompt="Write a short sci-fi story about an AI that discovers it's living in a simulation">
+          <span class="suggestion-icon">✨</span><span>Creative: Sci-fi short story</span>
+        </button>
+      </div>
+    </div>
+    <div id="messagesContainer" class="messages-container"></div>
+  </main>
+
+  <!-- File preview bar -->
+  <div id="filePreviewBar" class="file-preview-bar hidden">
+    <div class="file-preview-inner" id="filePreviewInner"></div>
+  </div>
+
+  <!-- Input area -->
+  <footer class="input-area">
+    <div class="input-box" id="inputBox">
+      <div class="input-tools">
+        <button class="icon-btn attach-btn" id="attachBtn" title="Attach image or file">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+          </svg>
+        </button>
+        <input type="file" id="fileInput" accept="image/*,application/pdf,text/*,.csv,.json,.xml,.md,.py,.js,.ts,.html,.css,.java,.cpp,.c,.go,.rs,.rb,.php,.swift,.kt" multiple style="display:none" />
+        <button class="icon-btn" id="voiceBtn" title="Voice input">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+            <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
+          </svg>
+        </button>
+      </div>
+      <textarea
+        id="messageInput"
+        class="message-textarea"
+        placeholder="Message Gemini... (Enter to send, Shift+Enter for new line)"
+        rows="1"
+      ></textarea>
+      <div class="input-right">
+        <span id="charCount" class="char-count"></span>
+        <button class="send-btn" id="sendBtn" title="Send (Enter)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="input-footer-note">Gemini can make mistakes. Verify important information.</div>
+  </footer>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- Rename modal -->
+<div class="modal-overlay hidden" id="renameModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Rename Chat</h3>
+      <button class="icon-btn" id="renameClose"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <input type="text" id="renameInput" class="modal-input" placeholder="Chat title..." />
+    <div class="modal-actions">
+      <button class="btn-secondary" id="renameCancelBtn">Cancel</button>
+      <button class="btn-primary" id="renameConfirmBtn">Rename</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit message modal -->
+<div class="modal-overlay hidden" id="editModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3>Edit Message</h3>
+      <button class="icon-btn" id="editClose"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <textarea id="editInput" class="modal-textarea" rows="6"></textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="editCancelBtn">Cancel</button>
+      <button class="btn-primary" id="editConfirmBtn">Save &amp; Resend</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast hidden"></div>
+
+<!-- Context menu -->
+<div class="context-menu hidden" id="contextMenu">
+  <button class="ctx-item" id="ctxCopy">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+    Copy
+  </button>
+  <button class="ctx-item" id="ctxEdit">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    Edit &amp; Resend
+  </button>
+  <button class="ctx-item" id="ctxRegenerate">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+    Regenerate
+  </button>
+  <button class="ctx-item" id="ctxDelete">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+    Delete Message
+  </button>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
