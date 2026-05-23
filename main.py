@@ -23,7 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-MODEL = "gemini-3.1-pro-preview"
+MODEL = "gemini-2.5-pro-preview-05-06"
 
 
 class FilePart(BaseModel):
@@ -126,9 +126,13 @@ async def chat(request: ChatRequest):
             ]
 
             # Config
+            # thinking_budget: -1 = dynamic, 0 = off, >0 = fixed token budget
+            THINKING_BUDGET_MAP = {"LOW": 512, "MEDIUM": 4096, "HIGH": 8192}
+            thinking_budget = THINKING_BUDGET_MAP.get(request.thinking_level, 8192)
+
             config_kwargs: dict = {
                 "tools": tools,
-                "thinking_config": types.ThinkingConfig(thinking_level="HIGH"),
+                "thinking_config": types.ThinkingConfig(thinking_budget=thinking_budget),
             }
             if request.system_prompt:
                 config_kwargs["system_instruction"] = request.system_prompt
