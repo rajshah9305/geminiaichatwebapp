@@ -1,30 +1,30 @@
 /* ===== CSS VARIABLES ===== */
 :root {
-  --bg: #f8f9fb;
+  --bg: #f0faf8;
   --bg-secondary: #ffffff;
-  --sidebar-bg: #111827;
-  --sidebar-text: #e2e8f0;
-  --sidebar-muted: #94a3b8;
+  --sidebar-bg: #0d1f1c;
+  --sidebar-text: #d1faf4;
+  --sidebar-muted: #6db8ad;
   --sidebar-hover: rgba(255,255,255,0.06);
-  --sidebar-active: rgba(79,142,247,0.18);
-  --border: #e2e8f0;
-  --text: #1e293b;
-  --text-muted: #64748b;
-  --primary: #4f8ef7;
-  --primary-dark: #3b7de8;
-  --accent: #a855f7;
-  --user-bubble: linear-gradient(135deg, #4f8ef7, #a855f7);
+  --sidebar-active: rgba(20,184,166,0.18);
+  --border: #d1faf4;
+  --text: #0f2e29;
+  --text-muted: #4a8a80;
+  --primary: #14b8a6;
+  --primary-dark: #0d9488;
+  --accent: #10b981;
+  --user-bubble: linear-gradient(135deg, #14b8a6, #10b981);
   --model-bubble: #ffffff;
-  --model-border: #e2e8f0;
-  --thinking-bg: #fefce8;
-  --thinking-border: #fde047;
-  --thinking-text: #713f12;
+  --model-border: #ccf0eb;
+  --thinking-bg: #f0fdf9;
+  --thinking-border: #6ee7d8;
+  --thinking-text: #0f5c52;
   --input-bg: #ffffff;
-  --input-border: #e2e8f0;
-  --input-focus: #4f8ef7;
-  --shadow: 0 1px 3px rgba(0,0,0,0.08);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-  --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+  --input-border: #ccf0eb;
+  --input-focus: #14b8a6;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(20,184,166,0.10);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.10);
   --radius: 14px;
   --radius-sm: 8px;
   --sidebar-width: 288px;
@@ -33,19 +33,19 @@
 }
 
 body.dark {
-  --bg: #0f1117;
-  --bg-secondary: #181c27;
-  --sidebar-bg: #0a0d14;
-  --border: #252d3d;
-  --text: #e2e8f0;
-  --text-muted: #94a3b8;
-  --model-bubble: #1a1f2e;
-  --model-border: #252d3d;
-  --thinking-bg: #1c1a00;
-  --thinking-border: #a16207;
-  --thinking-text: #fde68a;
-  --input-bg: #1a1f2e;
-  --input-border: #252d3d;
+  --bg: #071412;
+  --bg-secondary: #0d1f1c;
+  --sidebar-bg: #060f0d;
+  --border: #163028;
+  --text: #d1faf4;
+  --text-muted: #6db8ad;
+  --model-bubble: #0d1f1c;
+  --model-border: #163028;
+  --thinking-bg: #071a17;
+  --thinking-border: #0d6b5e;
+  --thinking-text: #6ee7d8;
+  --input-bg: #0d1f1c;
+  --input-border: #163028;
 }
 
 body.compact .bubble { padding: 8px 12px; font-size: 13px; }
@@ -93,7 +93,7 @@ body { display: flex; background: var(--bg); color: var(--text); overflow: hidde
   gap: 10px;
   font-weight: 700;
   font-size: 15px;
-  background: linear-gradient(135deg, #4f8ef7, #a855f7);
+  background: linear-gradient(135deg, #14b8a6, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -470,7 +470,7 @@ body { display: flex; background: var(--bg); color: var(--text); overflow: hidde
 .welcome-screen h1 {
   font-size: 34px;
   font-weight: 800;
-  background: linear-gradient(135deg, #4f8ef7, #a855f7);
+  background: linear-gradient(135deg, #14b8a6, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
